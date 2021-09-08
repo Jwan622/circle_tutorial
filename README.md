@@ -1,66 +1,22 @@
-# Circulate - Demo App for CircleCI
+The circle.yml is from this:
 
-[![CircleCI](https://circleci.com/gh/CircleCI-Public/circleci-demo-python-flask.svg?style=svg&circle-token=6715e4f37e6b8cee04ea7f1812ac00fb135199f9)](https://circleci.com/gh/CircleCI-Public/circleci-demo-python-flask/)
+https://circleci.com/docs/2.0/project-walkthrough/
 
-This is a working application that you can use to learn how to build, test and deploy with CircleCI 2.0. Follow the [Project Walkthrough](https://circleci.com/docs/2.0/project-walkthrough/) guide here.
+Some key notes:
 
-It's a 'social blogging' web application similar to Twitter. Users can create accounts, make posts, follow users and comment on posts. You can *circualate* your thoughts and ideas :-)
+The following describes the detail of the added key values:
 
-**Original Author Credit:** This is directly based on Miguel Grinberg's excellent [Flasky](https://github.com/miguelgrinberg/flasky) application.
+The restore_cache: step searches for a cache with a key that matches the key template. The template begins with deps1- and embeds the current branch name using {{ .Branch }}. The checksum for the requirements.txt file is also embedded into the key template using {{ checksum "requirements/dev.txt" }}. CircleCI restores the most recent cache that matches the template, in this case the branch the cache was saved on and the checksum of the requirements/dev.txt file used to create the cached virtualenv must match.
 
-The application uses Python and Flask for the backend.
+The run: step named Install Python deps in a venv creates and activates a virtual environment in which to install the Python dependencies, as before.
 
-**IMPORTANT:**
+The save_cache: step creates a cache from the specified paths, in this case venv. The cache key is created from the template specified by the key:. Note that it is important to use the same template as the restore_cache: step so that CircleCI saves a cache that can be found by the restore_cache: step. Before saving the cache CircleCI generates the cache key from the template, if a cache that matches the generated key already exists then CircleCI does not save a new cache. Since the template contains the branch name and the checksum of requirements/dev.txt, CircleCI will create a new cache whenever the job runs on a different branch, and/or if the checksum of requirements/dev.txt changes.
 
-- You **do not need to know Python to follow the guide** in the CircleCI docs.
-- You will not need to install or setup a Python environment to follow the tutorial - you can follow along by making edits to config on GitHub if you wish.
-- No matter what language or stack you are going to use with CircleCI, we recommend following the walkthrough first, as it introduces concepts about CircleCI that you can then apply to your own project.
-
-## Deployment to Heroku
-
-The application demonstrates how to deploy to Heroku from CircleCI 2.0. Please consult the [Project Walkthrough](https://circleci.com/docs/2.0/project-walkthrough/) for documentation on how this works.
-
-## Running locally
-
-**Note:** As mentioned above you don't need to run this application locally to learn about using CircleCI.
-
-- Install PostgreSQL (tested with 9.6.5)
-- Install Python (tested with Python 3.6.2)
-- Fork or clone this repository
-- Create and activate a virtual environment
-- Enter the following commands:
-
-```
-createdb circulate
-pip install -r requirements/dev.txt
-python manage.py deploy
-python manage.py runserver
-```
-
-You can now test the app locally with the Flask development server.
-
-## Tests
-
-The app runs various tests:
-
-- unit tests for database models (using unittest)
-- unit tests for client view functions (using Flask Test Client)
-- unit tests for the API (using Flask Test Client)
-- integration tests for logging in etc (using Selenium and ChromeDriver)
-
-It uses [unittest-xml-reporting](https://github.com/xmlrunner/unittest-xml-reporting) for JUNIT style report generation.
-
-See the `tests` directory for details.
-
-`python manage.py test` to run the tests locally.
+You can read more about caching [here](https://circleci.com/docs/2.0/caching/).
 
 
-## TODO
+Each command runs in a new shell, so the virtual environment that was activated in the dependencies installation step is activated again in this final run: key with . venv/bin/activate.
+The store_artifacts step is a special step. The path: is a directory relative to the project’s root directory where the files are stored. The destination: specifies a prefix chosen to be unique in the event that another step in the job produces artifacts in a directory with the same name. CircleCI collects and uploads the artifacts to S3 for storage.
+When a job completes, artifacts appear in the CircleCI Artifacts tab:
 
-- add parallelization
-- test with multiple python versions
-- run with coverage on CircleCI
-- make email testing work on CircleCI with mailhog
-- make email work on the deployed Heroku app
 
----
